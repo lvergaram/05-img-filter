@@ -25,8 +25,10 @@ const convertImage = (url) =>{
   jimp.read(url)
     .then( image => {
     return image
-      .greyscale() // set greyscale
-      .write(__dirname+'/public/src/img/image.png'); // save
+      .resize(256, 256) 
+      .quality(60) 
+      .greyscale() 
+      .write(__dirname+'/public/src/img/image.png'); 
   })
   .catch((err) => {
     console.error(err);
