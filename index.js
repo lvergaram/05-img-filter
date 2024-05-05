@@ -1,5 +1,6 @@
 import express from 'express'
 import jimp from 'jimp'
+import { v4 as uuidv4 } from 'uuid';
 
 
 const app = express()
@@ -21,14 +22,15 @@ const isValidUrl = (string) => {
     }
 }
 
-const convertImage = (url) =>{
-  jimp.read(url)
+const convertImage = async(url,id) =>{
+  
+  await jimp.read(url)
     .then( image => {
     return image
-      .resize(256, 256) 
+      .resize(350,  jimp.AUTO) 
       .quality(60) 
       .greyscale() 
-      .write(__dirname+'/public/src/img/image.png'); 
+      .write(__dirname+`/public/src/img/${id}.jpg`); 
   })
   .catch((err) => {
     console.error(err);
@@ -40,16 +42,18 @@ const homeHandler = (req,res) => {
     res.sendFile(__dirname+'/public')
 }
 
-const imagenHandler = (req,res) => {
+const imagenHandler = async (req,res) => {
     const {url} = req.body
+    const id = uuidv4()
     if(!url) res.status(400).send('se requiere enlace')
     if(!isValidUrl(url)) res.status(400).send(`"${url}" no es una URL valida`)
-    convertImage(url)
-    res.redirect('/filter-image')
+    await convertImage(url,id)
+    return await res.redirect(`/filter-image/${id}`)
 }
 
-const filterImageHandler = (req,res)=>{
-    res.sendFile(__dirname+'/public/image.html')
+const filterImageHandler = async(req,res)=>{
+    const {id} = req.params
+    await res.sendFile(__dirname+'/public/src/img/'+id+'.jpg')
 }
 
 const downloadImage = (req,res)=>{
@@ -60,7 +64,7 @@ const downloadImage = (req,res)=>{
 // ROUTES
 
 app.get('/', homeHandler)
-app.get('/filter-image', filterImageHandler)
+app.get('/filter-image/:id', filterImageHandler)
 app.get('/dl-image', downloadImage)
 app.post('/imagen',imagenHandler)
 
